@@ -1,0 +1,135 @@
+<svg width="100%" viewBox="0 0 700 895" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif">
+  <title>GEO technical audit automation pipeline — free-tier prototype</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#73726c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- title -->
+  <text x="350" y="24" text-anchor="middle" font-size="16" font-weight="600" fill="#1a1a18">GEO technical audit — free-tier prototype</text>
+  <text x="350" y="44" text-anchor="middle" font-size="12" fill="#5f5e5a">No Screaming Frog · No SEMrush · n8n optional · LLM via Groq</text>
+
+  <!-- TRIGGER -->
+  <g>
+    <rect x="210" y="64" width="280" height="52" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.5"/>
+    <text x="350" y="84" text-anchor="middle" font-size="14" font-weight="500" fill="#444441">Trigger — domain input</text>
+    <text x="350" y="102" text-anchor="middle" font-size="12" fill="#5f5e5a">Streamlit UI (or CLI / Task Scheduler)</text>
+  </g>
+  <line x1="350" y1="116" x2="350" y2="150" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.5"/>
+
+  <!-- ORCHESTRATOR -->
+  <g>
+    <rect x="170" y="150" width="360" height="54" rx="8" fill="#eeedfe" stroke="#534ab7" stroke-width="0.5"/>
+    <text x="350" y="170" text-anchor="middle" font-size="14" font-weight="500" fill="#3c3489">Pipeline orchestrator</text>
+    <text x="350" y="188" text-anchor="middle" font-size="12" fill="#534ab7">run_audit.ps1 — local Python (n8n optional)</text>
+  </g>
+
+  <!-- free-tier note -->
+  <g>
+    <rect x="520" y="150" width="168" height="54" rx="8" fill="#faeeda" stroke="#85540b" stroke-width="0.5"/>
+    <text x="604" y="170" text-anchor="middle" font-size="13" font-weight="500" fill="#633806">100% free tier</text>
+    <text x="604" y="187" text-anchor="middle" font-size="11" fill="#85540b">no paid tools required</text>
+  </g>
+  <path d="M520 177 L530 177" fill="none" stroke="#73726c" stroke-width="0.5" stroke-dasharray="4 3" opacity="0.5"/>
+
+  <!-- fan-out -->
+  <path d="M300 204 L104 240" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.45"/>
+  <path d="M330 204 L268 240" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.45"/>
+  <path d="M370 204 L432 240" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.45"/>
+  <path d="M400 204 L596 240" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.45"/>
+
+  <!-- DATA SOURCES -->
+  <g>
+    <rect x="30" y="240" width="148" height="78" rx="8" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.5"/>
+    <text x="104" y="262" text-anchor="middle" font-size="13" font-weight="500" fill="#085041">Custom crawler</text>
+    <text x="104" y="280" text-anchor="middle" font-size="11" fill="#0f6e56">async HTTP + parser</text>
+    <text x="104" y="296" text-anchor="middle" font-size="11" fill="#0f6e56">replaces Screaming Frog</text>
+    <text x="104" y="311" text-anchor="middle" font-size="10" fill="#0f6e56">titles, schema, links, status</text>
+  </g>
+  <g>
+    <rect x="194" y="240" width="148" height="78" rx="8" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.5"/>
+    <text x="268" y="262" text-anchor="middle" font-size="13" font-weight="500" fill="#085041">PageSpeed API</text>
+    <text x="268" y="280" text-anchor="middle" font-size="11" fill="#0f6e56">Core Web Vitals</text>
+    <text x="268" y="296" text-anchor="middle" font-size="11" fill="#0f6e56">Lighthouse — free key</text>
+    <text x="268" y="311" text-anchor="middle" font-size="10" fill="#0f6e56">LCP, CLS, perf score</text>
+  </g>
+  <g>
+    <rect x="358" y="240" width="148" height="78" rx="8" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.5"/>
+    <text x="432" y="262" text-anchor="middle" font-size="13" font-weight="500" fill="#085041">Search Console API</text>
+    <text x="432" y="280" text-anchor="middle" font-size="11" fill="#0f6e56">sitemaps, indexing</text>
+    <text x="432" y="296" text-anchor="middle" font-size="11" fill="#0f6e56">free · optional</text>
+    <text x="432" y="311" text-anchor="middle" font-size="10" fill="#0f6e56">service account</text>
+  </g>
+  <g>
+    <rect x="522" y="240" width="148" height="78" rx="8" fill="#e1f5ee" stroke="#0f6e56" stroke-width="0.5"/>
+    <text x="596" y="262" text-anchor="middle" font-size="13" font-weight="500" fill="#085041">GA4 Data API</text>
+    <text x="596" y="280" text-anchor="middle" font-size="11" fill="#0f6e56">events, goals</text>
+    <text x="596" y="296" text-anchor="middle" font-size="11" fill="#0f6e56">free · optional</text>
+    <text x="596" y="311" text-anchor="middle" font-size="10" fill="#0f6e56">tag coverage</text>
+  </g>
+
+  <!-- converge -->
+  <path d="M104 318 L300 356" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.45"/>
+  <path d="M268 318 L330 356" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.45"/>
+  <path d="M432 318 L370 356" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.45"/>
+  <path d="M596 318 L400 356" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.45"/>
+
+  <!-- MERGE + PARSE -->
+  <g>
+    <rect x="170" y="356" width="360" height="52" rx="8" fill="#eeedfe" stroke="#534ab7" stroke-width="0.5"/>
+    <text x="350" y="376" text-anchor="middle" font-size="14" font-weight="500" fill="#3c3489">Merge + parse evidence</text>
+    <text x="350" y="394" text-anchor="middle" font-size="12" fill="#534ab7">score.py assembles crawl + API data per category</text>
+  </g>
+  <line x1="350" y1="408" x2="350" y2="442" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.5"/>
+
+  <!-- LLM SCORING -->
+  <g>
+    <rect x="160" y="442" width="380" height="66" rx="8" fill="#eeedfe" stroke="#534ab7" stroke-width="0.5"/>
+    <text x="350" y="463" text-anchor="middle" font-size="14" font-weight="500" fill="#3c3489">LLM scoring — Groq</text>
+    <text x="350" y="481" text-anchor="middle" font-size="12" fill="#534ab7">llama-3.3-70b · OpenAI-compatible (LiteLLM-ready)</text>
+    <text x="350" y="497" text-anchor="middle" font-size="12" fill="#534ab7">maps data → Yes / No / N·A + weighted score</text>
+  </g>
+  <line x1="350" y1="508" x2="350" y2="542" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.5"/>
+
+  <!-- ROUTER -->
+  <g>
+    <rect x="205" y="542" width="290" height="52" rx="8" fill="#faeeda" stroke="#85540b" stroke-width="0.5"/>
+    <text x="350" y="562" text-anchor="middle" font-size="14" font-weight="500" fill="#633806">Route by source mode</text>
+    <text x="350" y="580" text-anchor="middle" font-size="12" fill="#85540b">auto-scored vs manual-review split</text>
+  </g>
+  <path d="M265 594 L165 636" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.5"/>
+  <path d="M435 594 L535 636" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.5"/>
+
+  <!-- AUTO -->
+  <g>
+    <rect x="55" y="636" width="220" height="56" rx="8" fill="#eaf3de" stroke="#3b6d11" stroke-width="0.5"/>
+    <text x="165" y="658" text-anchor="middle" font-size="14" font-weight="500" fill="#27500a">Auto-scored (~86%)</text>
+    <text x="165" y="678" text-anchor="middle" font-size="11" fill="#3b6d11">crawler · PSI · GSC · GA4 · LLM</text>
+  </g>
+  <!-- MANUAL -->
+  <g>
+    <rect x="425" y="636" width="220" height="56" rx="8" fill="#faece7" stroke="#993c1d" stroke-width="0.5"/>
+    <text x="535" y="658" text-anchor="middle" font-size="14" font-weight="500" fill="#712b13">Manual review (~14%)</text>
+    <text x="535" y="678" text-anchor="middle" font-size="11" fill="#993c1d">DA/backlinks · GBP · AIO citation</text>
+  </g>
+
+  <!-- converge to output -->
+  <path d="M165 692 L300 734" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.5"/>
+  <path d="M535 692 L400 734" fill="none" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.2" opacity="0.5"/>
+
+  <!-- OUTPUT -->
+  <g>
+    <rect x="170" y="734" width="360" height="52" rx="8" fill="#e6f1fb" stroke="#185fa5" stroke-width="0.5"/>
+    <text x="350" y="754" text-anchor="middle" font-size="14" font-weight="500" fill="#0c447c">Populated audit output</text>
+    <text x="350" y="772" text-anchor="middle" font-size="12" fill="#185fa5">Excel workbook + results.json (weighted score)</text>
+  </g>
+  <line x1="350" y1="786" x2="350" y2="818" marker-end="url(#arrow)" stroke="#73726c" stroke-width="1.5"/>
+
+  <!-- UI DISPLAY -->
+  <g>
+    <rect x="190" y="818" width="320" height="54" rx="8" fill="#f1efe8" stroke="#5f5e5a" stroke-width="0.5"/>
+    <text x="350" y="838" text-anchor="middle" font-size="14" font-weight="500" fill="#444441">Streamlit scorecard</text>
+    <text x="350" y="856" text-anchor="middle" font-size="12" fill="#5f5e5a">score · per-question detail · Excel download</text>
+  </g>
+</svg>

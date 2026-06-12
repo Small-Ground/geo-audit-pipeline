@@ -6,11 +6,14 @@ crawler replaces Screaming Frog, and the off-page / competitive checks that only
 SEMrush/Moz could answer are routed to manual review.
 
 ```
-n8n (self-hosted)  →  crawler + PageSpeed Insights + GSC + GA4
-                   →  LiteLLM → Gemini (Yes/No/N·A mapping + content judgments)
-                   →  deterministic weighting (workbook math)
-                   →  populated Excel + weighted score
+Streamlit UI  →  crawler + PageSpeed Insights + GSC + GA4
+              →  Groq llama-3.3-70b (Yes/No/N·A mapping + content judgments)
+              →  deterministic weighting (workbook math)
+              →  populated Excel + weighted score + scorecard
 ```
+
+📐 **[Architecture diagram & old→new mapping](docs/ARCHITECTURE.md)** — how this
+mirrors the original n8n flow on free tiers.
 
 ## What's auto-scored vs manual
 
