@@ -299,6 +299,19 @@ def main():
     cats, total = summarise(results)
     write_excel(results, cats, total, crawl, ROOT / args.out)
 
+    # machine-readable results for the UI / downstream tools
+    (ROOT / "output").mkdir(exist_ok=True)
+    with open(ROOT / "output/results.json", "w", encoding="utf-8") as f:
+        json.dump({
+            "meta": {"domain": crawl.get("domain"),
+                     "crawled_at": crawl.get("crawled_at"),
+                     "generated": datetime.now(timezone.utc).isoformat(),
+                     "pages_crawled": crawl.get("pages_crawled"),
+                     "excel": str(args.out)},
+            "summary": {"total": total, "categories": dict(cats)},
+            "results": results,
+        }, f, indent=2, ensure_ascii=False)
+
     print(f"\nTotal Weighting Score: "
           f"{round(total['score'], 4) if total['score'] is not None else 'n/a'} "
           f"({round(total['num'])}/{round(total['den'])})")

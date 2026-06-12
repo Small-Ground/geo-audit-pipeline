@@ -50,6 +50,19 @@ Manual-review and not-yet-answered questions are excluded from the denominator
 and reported as outstanding coverage. The output also reports **agreement with
 the human-filled answers** still in the workbook — a live accuracy check.
 
+## For SEO analysts — the web UI (no terminal)
+
+```powershell
+pip install -r requirements.txt -r ui/requirements.txt
+.\run_ui.ps1            # opens http://localhost:8501
+```
+Paste a URL → **Run audit** → watch progress → read the scorecard (total score,
+per-category bars, every question with its answer/source/rationale colour-coded)
+→ **Download full Excel audit**. Keys are read from `.env`; the sidebar shows
+which data sources are configured and has a crawl-depth slider + offline toggle.
+
+> Can be deployed free to Streamlit Community Cloud later for a shareable link.
+
 ## Run it — one command, no n8n, no Docker
 
 ```powershell
