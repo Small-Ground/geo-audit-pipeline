@@ -4,7 +4,7 @@ workbook's weighting math, and writes a populated Excel audit + score summary.
 
 Two paths:
   * production: each category's evidence is sent to LiteLLM (OpenAI-compatible
-    proxy, fronting Gemini) which returns Yes/No/N·A per question.
+    proxy, fronting Groq) which returns Yes/No/N·A per question.
   * --offline:  deterministic rules (offline_rules.py) score the unambiguous
     crawler/PSI checks with no LLM/API key. Anything a rule can't decide is
     marked PENDING_LLM.
@@ -23,7 +23,7 @@ Usage:
 Env (LLM path):
     LITELLM_BASE_URL (default http://localhost:4000/v1)
     LITELLM_API_KEY
-    LLM_MODEL        (default gemini-2.0-flash)
+    LLM_MODEL        (default llama-3.3-70b-versatile)
 """
 
 import argparse
@@ -89,7 +89,7 @@ SYSTEM = (
 def ask_llm(category, evidence, questions):
     base = os.environ.get("LITELLM_BASE_URL", "http://localhost:4000/v1")
     key = os.environ.get("LITELLM_API_KEY", "sk-none")
-    model = os.environ.get("LLM_MODEL", "gemini-2.0-flash")
+    model = os.environ.get("LLM_MODEL", "llama-3.3-70b-versatile")
     payload = {
         "model": model,
         "temperature": 0,
@@ -287,7 +287,9 @@ def main():
     ap.add_argument("--out", default="output/audit_populated.xlsx")
     args = ap.parse_args()
 
-    bank = load("config/question_bank.json", [])
+    # full bank (local, may include human reference answers) or the committed
+    # sanitized sample (used on deployments where the full bank isn't present)
+    bank = load("config/question_bank.json", None) or load("config/question_bank.sample.json", [])
     crawl = load("output/crawl.json", {})
     psi = load("output/psi.json", {})
     gsc = load("output/gsc.json", {"available": False})

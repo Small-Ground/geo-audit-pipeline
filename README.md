@@ -100,7 +100,7 @@ Register-ScheduledTask -TaskName "GEO-Audit-Weekly" -Action $action -Trigger $tr
 ## Full run (with free API keys + LLM)
 
 ```bash
-cp .env.example .env        # fill GEMINI_API_KEY, PSI_API_KEY, GSC/GA4
+cp .env.example .env        # fill GROQ_API_KEY, PSI_API_KEY, GSC/GA4
 # put the GSC/GA4 service-account JSON at ./secrets/service-account.json
 
 docker compose up -d        # starts n8n (localhost:5678) + LiteLLM (localhost:4000)

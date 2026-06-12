@@ -41,7 +41,7 @@ Gives SEO analysts a shareable URL — no install, no terminal. Free tier.
 ## Notes
 - **Confidentiality:** deploying runs crawls on Streamlit/Snowflake infrastructure
   and grants Streamlit OAuth access to the repo. For client-confidential work,
-  prefer running locally or on the organisation-internal infrastructure.
+  prefer running locally or on your organisation's internal infrastructure.
 - **Playwright `--render`** is **not** available on the cloud sandbox (browser
   binaries are too heavy) — use it locally and upload results.
 - **Sleeping:** free apps sleep after inactivity and wake on next visit.
