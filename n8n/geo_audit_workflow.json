@@ -1,0 +1,77 @@
+{
+  "name": "GEO Technical Audit (free-tier)",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-manual",
+      "name": "Run audit",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-40, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "domain", "value": "https://www.beaumont-tiles.com.au/" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-domain",
+      "name": "Set Domain",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [180, 300]
+    },
+    {
+      "parameters": {
+        "command": "=cd /data && python3 crawler/crawl.py \"{{ $('Set Domain').item.json.domain }}\" --max-pages 300 --img-cap 300 --out output/crawl.json"
+      },
+      "id": "exec-crawl",
+      "name": "Crawl (SF replacement)",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [420, 300]
+    },
+    {
+      "parameters": {
+        "command": "=cd /data && python3 collectors/psi.py \"{{ $('Set Domain').item.json.domain }}\" --out output/psi.json"
+      },
+      "id": "exec-psi",
+      "name": "PageSpeed Insights",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /data && python3 collectors/google_apis.py --out-gsc output/gsc.json --out-ga4 output/ga4.json"
+      },
+      "id": "exec-google",
+      "name": "GSC + GA4",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /data && python3 scorer/score.py --out output/audit_populated.xlsx"
+      },
+      "id": "exec-score",
+      "name": "Score + write Excel",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [1140, 300]
+    }
+  ],
+  "connections": {
+    "Run audit": { "main": [[{ "node": "Set Domain", "type": "main", "index": 0 }]] },
+    "Set Domain": { "main": [[{ "node": "Crawl (SF replacement)", "type": "main", "index": 0 }]] },
+    "Crawl (SF replacement)": { "main": [[{ "node": "PageSpeed Insights", "type": "main", "index": 0 }]] },
+    "PageSpeed Insights": { "main": [[{ "node": "GSC + GA4", "type": "main", "index": 0 }]] },
+    "GSC + GA4": { "main": [[{ "node": "Score + write Excel", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "_comment": "Swap 'Run audit' for a Schedule Trigger to run on a cadence. The collectors and crawler are pure HTTP, so this can also be rebuilt with HTTP Request nodes to run on n8n Cloud (no Execute Command needed) now that Screaming Frog is gone."
+}

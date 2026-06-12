@@ -1,0 +1,6 @@
+# PSI needs only httpx (already in crawler reqs).
+httpx==0.27.2
+# GSC + GA4 (service-account auth):
+google-api-python-client==2.149.0
+google-auth==2.35.0
+google-analytics-data==0.18.12

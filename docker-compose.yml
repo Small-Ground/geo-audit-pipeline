@@ -1,0 +1,41 @@
+name: geo-audit
+
+services:
+  # Self-hosted n8n (with Python baked in) — the orchestrator.
+  n8n:
+    build:
+      context: .
+      dockerfile: Dockerfile.n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_SECURE_COOKIE=false
+      - GENERIC_TIMEZONE=Australia/Sydney
+      # passed through to Execute Command -> python scripts
+      - PSI_API_KEY=${PSI_API_KEY:-}
+      - GSC_SITE_URL=${GSC_SITE_URL:-}
+      - GA4_PROPERTY_ID=${GA4_PROPERTY_ID:-}
+      - GOOGLE_APPLICATION_CREDENTIALS=/data/secrets/service-account.json
+      - LITELLM_BASE_URL=http://litellm:4000/v1
+      - LITELLM_API_KEY=${LITELLM_MASTER_KEY:-sk-local}
+      - LLM_MODEL=${LLM_MODEL:-gemini-2.0-flash}
+    volumes:
+      - ./:/data            # project (scripts, config, output) mounted into n8n
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - litellm
+
+  # LiteLLM proxy fronting Gemini's free tier (OpenAI-compatible API).
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    ports:
+      - "4000:4000"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-local}
+    volumes:
+      - ./litellm/config.yaml:/app/config.yaml
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+
+volumes:
+  n8n_data:

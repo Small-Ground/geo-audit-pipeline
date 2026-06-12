@@ -1,0 +1,10 @@
+.env
+secrets/
+output/
+# Client-derived: generated from the source workbook, regenerate with
+# tools/extract_question_bank.py. Keeps client answers/methodology out of the repo.
+config/question_bank.json
+# Never commit source client workbooks
+*.xlsx
+__pycache__/
+*.pyc

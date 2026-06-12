@@ -1,0 +1,10 @@
+# n8n + Python, so Execute Command nodes can drive the audit scripts directly.
+FROM n8nio/n8n:latest
+
+USER root
+RUN apk add --no-cache python3 py3-pip && \
+    python3 -m pip install --no-cache-dir --break-system-packages \
+        "httpx[http2]==0.27.2" beautifulsoup4==4.12.3 lxml==5.3.0 \
+        openpyxl==3.1.5 google-api-python-client==2.149.0 \
+        google-auth==2.35.0 google-analytics-data==0.18.12
+USER node
