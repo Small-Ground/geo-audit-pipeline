@@ -26,6 +26,17 @@ import httpx
 from bs4 import BeautifulSoup
 
 UA = "GEO-Audit-Bot/0.1 (+prototype)"
+# Fields re-derived from the rendered DOM when --render is on. Technical signals
+# (status, redirects, http_version) stay from the httpx response — rendering
+# follows redirects and would hide them.
+RENDER_FIELDS = [
+    "title", "title_len", "meta_description", "meta_desc_len", "h1", "h1_count",
+    "h2_count", "hreflang", "has_x_default", "schema", "open_graph",
+    "twitter_card", "rel_me_or_sameas", "social_links", "word_count",
+    "text_sample", "content_in_accordion", "last_updated_visible",
+    "click_to_call", "has_iframe", "img_count", "img_missing_alt", "img_urls",
+    "internal_links", "external_links", "anchors", "generic_anchors",
+]
 SCHEMA_TYPES = [
     "Product", "Offer", "AggregateRating", "Review", "Article", "NewsArticle",
     "FAQPage", "HowTo", "HowToStep", "Organization", "WebSite",
@@ -46,9 +57,11 @@ def same_host(a: str, b: str) -> bool:
 
 
 def text_of(soup: BeautifulSoup) -> str:
-    for tag in soup(["script", "style", "noscript"]):
-        tag.extract()
-    return re.sub(r"\s+", " ", soup.get_text(" ")).strip()
+    # non-mutating: do NOT extract() nodes — that would strip JSON-LD <script>
+    # tags from the shared soup before schema detection runs.
+    parts = [t for t in soup.find_all(string=True)
+             if t.parent.name not in ("script", "style", "noscript")]
+    return re.sub(r"\s+", " ", " ".join(parts)).strip()
 
 
 def parse_page(url: str, html: str, status: int, elapsed: float,
@@ -93,13 +106,22 @@ def parse_page(url: str, html: str, status: int, elapsed: float,
 
     # JSON-LD schema types
     schema_found = set()
-    for s in soup.find_all("script", type="application/ld+json"):
+    for s in soup.find_all("script", type=re.compile(r"application/ld\+json", re.I)):
+        raw = s.get_text() or ""          # get_text() is robust where .string is None
+        if not raw.strip():
+            continue
         try:
-            data = json.loads(s.string or "{}")
+            data = json.loads(raw)
         except (json.JSONDecodeError, TypeError):
             continue
-        for obj in (data if isinstance(data, list) else [data]):
-            if isinstance(obj, dict):
+        stack = list(data) if isinstance(data, list) else [data]
+        while stack:                       # walk @graph and nested arrays
+            obj = stack.pop()
+            if isinstance(obj, list):
+                stack.extend(obj)
+            elif isinstance(obj, dict):
+                if isinstance(obj.get("@graph"), list):
+                    stack.extend(obj["@graph"])
                 t = obj.get("@type", "")
                 for tt in (t if isinstance(t, list) else [t]):
                     if tt in SCHEMA_TYPES:
@@ -232,6 +254,74 @@ async def site_signals(client, start_url):
     return sig
 
 
+async def sitemap_seed_urls(client, sitemap_url, cap):
+    """Expand the sitemap (incl. sitemap-index) and return an even sample of
+    real URLs, so the crawl actually visits PDPs/categories/blog pages rather
+    than only what's reachable from the homepage."""
+    if not sitemap_url or cap <= 0:
+        return []
+    try:
+        body = (await client.get(sitemap_url, follow_redirects=True)).text
+    except httpx.HTTPError:
+        return []
+    locs = re.findall(r"<loc>\s*(.*?)\s*</loc>", body)
+    # sitemap index -> fetch children
+    if "<sitemapindex" in body.lower() or (locs and all(l.endswith(".xml") for l in locs[:3])):
+        children, locs = locs[:8], []
+        for child in children:
+            try:
+                cb = (await client.get(child, follow_redirects=True)).text
+                locs += re.findall(r"<loc>\s*(.*?)\s*</loc>", cb)
+            except httpx.HTTPError:
+                pass
+    locs = [l for l in locs if l.startswith("http") and not l.endswith(".xml")]
+    if len(locs) > cap:                       # even spread across the sitemap
+        step = max(1, len(locs) // cap)
+        locs = locs[::step][:cap]
+    return locs
+
+
+async def render_pages(pages, cap):
+    """Re-read crawled pages through a headless browser so JS-injected schema,
+    hreflang, OG tags and content are captured. Updates page dicts in place."""
+    from playwright.async_api import async_playwright
+
+    targets = [p for p in pages
+               if "title" in p and not p.get("error") and not p.get("non_html")][:cap]
+    if not targets:
+        return 0
+    rendered = 0
+    sem = asyncio.Semaphore(4)
+    async with async_playwright() as pw:
+        browser = await pw.chromium.launch(args=["--no-sandbox"])
+        ctx = await browser.new_context(user_agent=UA)
+
+        async def render_one(p):
+            nonlocal rendered
+            async with sem:
+                page = await ctx.new_page()
+                html = None
+                try:
+                    await page.goto(p["url"], wait_until="load", timeout=30000)
+                    await page.wait_for_timeout(1200)  # let late JSON-LD/JS settle
+                    html = await page.content()
+                except Exception:  # noqa: BLE001 - skip pages that fail to render
+                    html = None
+                finally:
+                    await page.close()
+            if html:
+                parsed = parse_page(p["url"], html, p.get("status"),
+                                    p.get("elapsed_s", 0), p.get("http_version", ""), {})
+                for k in RENDER_FIELDS:
+                    p[k] = parsed[k]
+                p["rendered"] = True
+                rendered += 1
+
+        await asyncio.gather(*(render_one(p) for p in targets))
+        await browser.close()
+    return rendered
+
+
 async def head_image_sizes(client, urls, cap):
     sizes, sem = {}, asyncio.Semaphore(20)
 
@@ -248,7 +338,8 @@ async def head_image_sizes(client, urls, cap):
     return sizes
 
 
-async def crawl(start_url, max_pages, img_cap):
+async def crawl(start_url, max_pages, img_cap, render=False, render_cap=30,
+                sitemap_seed=60):
     start_url = norm(start_url)
     seen, pages, depth = {start_url}, [], {start_url: 0}
     queue = deque([start_url])
@@ -258,6 +349,16 @@ async def crawl(start_url, max_pages, img_cap):
     async with httpx.AsyncClient(http2=True, timeout=20, limits=limits,
                                  headers={"User-Agent": UA}) as client:
         site = await site_signals(client, start_url)
+
+        # seed the queue with a sample of real sitemap URLs (PDPs/categories/blog)
+        seeded = set()
+        for u in await sitemap_seed_urls(client, site.get("sitemap", {}).get("url"), sitemap_seed):
+            nu = norm(u)
+            if nu not in seen:
+                seen.add(nu)
+                depth[nu] = 1
+                seeded.add(nu)
+                queue.append(nu)
 
         while queue and len(pages) < max_pages:
             url = queue.popleft()
@@ -285,6 +386,7 @@ async def crawl(start_url, max_pages, img_cap):
             page = parse_page(url, r.text, r.status_code, elapsed,
                               r.http_version, dict(r.headers))
             page["depth"] = depth.get(url, 0)
+            page["seeded"] = url in seeded
             pages.append(page)
 
             if depth.get(url, 0) < 8:
@@ -295,21 +397,26 @@ async def crawl(start_url, max_pages, img_cap):
                         depth[nl] = depth.get(url, 0) + 1
                         queue.append(nl)
 
-        # image sizes (sampled across crawled pages)
+        # optional: re-read pages through a headless browser (JS-rendered sites)
+        n_rendered = 0
+        if render:
+            n_rendered = await render_pages(pages, render_cap)
+
+        # image sizes (sampled across crawled pages; after render so JS imgs count)
         all_imgs = {u for pg in pages for u in pg.get("img_urls", [])}
         img_sizes = await head_image_sizes(client, all_imgs, img_cap)
 
-    return assemble(start_url, pages, site, redirects, depth, img_sizes)
+    return assemble(start_url, pages, site, redirects, depth, img_sizes, n_rendered)
 
 
-def assemble(start_url, pages, site, redirects, depth, img_sizes):
+def assemble(start_url, pages, site, redirects, depth, img_sizes, n_rendered=0):
     html_pages = [p for p in pages if p.get("title") is not None and "error" not in p
                   and not p.get("non_html")]
 
     # orphan detection: pages discovered but never linked-to internally
     linked_to = {norm(l) for p in html_pages for l in p.get("internal_links", [])}
     orphans = [p["url"] for p in html_pages if norm(p["url"]) not in linked_to
-               and p["url"] != start_url]
+               and p["url"] != start_url and not p.get("seeded")]
 
     titles = [p["title"] for p in html_pages if p.get("title")]
     dup_titles = len(titles) - len(set(titles))
@@ -343,6 +450,7 @@ def assemble(start_url, pages, site, redirects, depth, img_sizes):
         "orphan_pages": len(orphans),
         "max_depth": max(depth.values()) if depth else 0,
         "avg_depth": round(sum(p.get("depth", 0) for p in html_pages) / max(len(html_pages), 1), 2),
+        "pages_rendered": n_rendered,
         "pages_with_schema": sum(1 for p in html_pages if p.get("schema")),
         "schema_types_seen": sorted({t for p in html_pages for t in p.get("schema", [])}),
         "pages_with_og": sum(1 for p in html_pages if p.get("open_graph")),
@@ -382,10 +490,18 @@ def main():
     ap.add_argument("start_url")
     ap.add_argument("--max-pages", type=int, default=300)
     ap.add_argument("--img-cap", type=int, default=300)
+    ap.add_argument("--render", action="store_true",
+                    help="re-read pages via headless Chromium (JS-rendered sites)")
+    ap.add_argument("--render-cap", type=int, default=30,
+                    help="max pages to render when --render is set")
+    ap.add_argument("--sitemap-seed", type=int, default=60,
+                    help="sample N real URLs from the sitemap into the crawl (0=off)")
     ap.add_argument("--out", default="output/crawl.json")
     args = ap.parse_args()
 
-    result = asyncio.run(crawl(args.start_url, args.max_pages, args.img_cap))
+    result = asyncio.run(crawl(args.start_url, args.max_pages, args.img_cap,
+                               render=args.render, render_cap=args.render_cap,
+                               sitemap_seed=args.sitemap_seed))
 
     import os
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
@@ -393,7 +509,7 @@ def main():
         json.dump(result, f, indent=2, ensure_ascii=False)
     a = result["aggregates"]
     print(f"Crawled {result['pages_crawled']} pages "
-          f"({a['pages_html']} HTML) of {result['domain']}")
+          f"({a['pages_html']} HTML, {a['pages_rendered']} rendered) of {result['domain']}")
     print(f"  404s={a['status_404']} 5xx={a['status_5xx']} "
           f"dup_titles={a['dup_title']} missing_meta={a['missing_meta']} "
           f"thin={a['thin_pages']} orphans={a['orphan_pages']} "

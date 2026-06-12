@@ -1,0 +1,3 @@
+# Optional — only needed for the --render flag (JS-rendered sites).
+# After installing, run once:  python -m playwright install chromium
+playwright==1.48.0

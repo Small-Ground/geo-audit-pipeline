@@ -36,7 +36,7 @@ free tiers only.
 | `crawler/crawl.py` | Async crawler — the Screaming Frog replacement | ✅ |
 | `collectors/psi.py` | PageSpeed Insights (Core Web Vitals, Lighthouse) | ✅ key |
 | `collectors/google_apis.py` | GSC (sitemaps/index) + GA4 (events/goals) | ✅ service acct |
-| `scorer/score.py` | LiteLLM→Gemini mapping + weighting + Excel writer | ✅ |
+| `scorer/score.py` | Groq llama-3.3-70b mapping + weighting + Excel writer | ✅ |
 | `scorer/offline_rules.py` | Deterministic no-LLM fallback (demo) | ✅ |
 | `docker-compose.yml` | n8n (self-hosted, Python baked in) + LiteLLM | ✅ |
 | `n8n/geo_audit_workflow.json` | Importable orchestration workflow | ✅ |
@@ -110,9 +110,13 @@ The workflow runs crawl → PSI → GSC/GA4 → score, writing
 - **Scale:** the source audit crawled 54,079 URLs. For a prototype, cap the
   crawl (`--max-pages`). Full-site is slower but works; raise the cap and run
   the crawler with more time.
-- **JS-rendered content:** the crawler reads server HTML. On heavily client-
-  rendered sites (e.g. Magento PDPs), schema/OG may need a deeper crawl or a
-  headless-render step (future: Playwright) to surface.
+- **Crawl coverage:** the crawler seeds from the sitemap (`--sitemap-seed N`,
+  default 60) so PDPs/categories/blog pages are actually visited, not just what's
+  linked from the homepage. This is the main accuracy lever.
+- **JS-rendered content:** the crawler reads server HTML (sufficient for most
+  sites — schema is usually server-rendered). For genuinely client-rendered
+  sites, add `--render` to re-read pages through headless Chromium
+  (`pip install -r crawler/requirements-render.txt && python -m playwright install chromium`).
 - **PSI quota:** unauthenticated PSI is rate-limited (429). Use a free
   `PSI_API_KEY`.
 - **No Execute Command needed on Cloud:** since Screaming Frog is gone, every
