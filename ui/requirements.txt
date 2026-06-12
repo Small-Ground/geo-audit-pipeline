@@ -1,2 +1,10 @@
-streamlit==1.40.2
-pandas==2.2.3
+# Streamlit Community Cloud installs the requirements file next to the entry
+# point (ui/app.py) in preference to the repo root — so this MUST list every
+# runtime dependency the pipeline imports, not just Streamlit.
+# Keep in sync with the root requirements.txt.
+httpx[http2]>=0.27
+beautifulsoup4>=4.12
+lxml>=5.0
+openpyxl>=3.1
+streamlit>=1.40
+pandas>=2.2
