@@ -64,7 +64,10 @@ per-category bars, every question with its answer/source/rationale colour-coded)
 → **Download full Excel audit**. Keys are read from `.env`; the sidebar shows
 which data sources are configured and has a crawl-depth slider + offline toggle.
 
-> Can be deployed free to Streamlit Community Cloud later for a shareable link.
+> Deploy free to Streamlit Community Cloud for a shareable link — see
+> **[docs/DEPLOY.md](docs/DEPLOY.md)**. The app reads keys from Streamlit secrets
+> when hosted, and supports uploading a `results.json` to view a full audit run
+> locally (keeping heavy crawls out of the cloud sandbox).
 
 ## Run it — one command, no n8n, no Docker
 

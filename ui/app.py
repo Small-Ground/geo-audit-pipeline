@@ -25,6 +25,8 @@ ANSWER_COLORS = {
 
 
 def load_env() -> dict:
+    """Keys from .env (local) merged with st.secrets (Streamlit Cloud).
+    Secrets win, so the same app runs locally and deployed."""
     env, p = {}, ROOT / ".env"
     if p.exists():
         for line in p.read_text(encoding="utf-8").splitlines():
@@ -33,6 +35,10 @@ def load_env() -> dict:
                 v = m.group(2).strip().strip('"').strip("'")
                 if v:
                     env[m.group(1)] = v
+    try:  # st.secrets raises if no secrets configured — fine locally
+        env.update({k: str(v) for k, v in st.secrets.items()})
+    except Exception:  # noqa: BLE001
+        pass
     return env
 
 
@@ -75,6 +81,8 @@ with st.sidebar:
 
 domain = st.text_input("Website URL", placeholder="https://www.example.com/")
 go = st.button("▶  Run audit", type="primary", disabled=not domain.strip())
+st.caption("On hosted free environments keep pages modest (≤150) to avoid timeouts. "
+           "For a full audit, run it locally and upload the results.json below.")
 
 if go:
     url = domain.strip()
@@ -98,6 +106,15 @@ if go:
             score_args.append("--offline")
         run_step("Scoring…", score_args, proc_env, status)
         status.update(label="Audit complete ✅", state="complete", expanded=False)
+
+# Viewer mode — display an audit produced elsewhere (e.g. a heavy local run),
+# without running the crawl in this (possibly resource-limited) environment.
+with st.expander("📂 Or view an existing audit — upload a results.json"):
+    up = st.file_uploader("results.json", type="json", label_visibility="collapsed")
+    if up is not None:
+        OUTPUT.mkdir(exist_ok=True)
+        (OUTPUT / "results.json").write_bytes(up.getvalue())
+        st.success("Loaded — scorecard below.")
 
 # --------------------------------------------------------------------------- #
 # Results

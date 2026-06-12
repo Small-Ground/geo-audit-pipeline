@@ -1,5 +1,6 @@
 .env
 secrets/
+.streamlit/secrets.toml
 output/
 # Client-derived: generated from the source workbook, regenerate with
 # tools/extract_question_bank.py. Keeps client answers/methodology out of the repo.

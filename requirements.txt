@@ -1,4 +1,7 @@
-# Combined deps for the audit pipeline (baked into the n8n image).
+# Combined deps for the audit pipeline + Streamlit UI.
+# Streamlit Community Cloud installs from this file at the repo root.
+# (Playwright is intentionally excluded — too heavy for the cloud sandbox;
+#  it lives in crawler/requirements-render.txt for local --render use.)
 httpx[http2]==0.27.2
 beautifulsoup4==4.12.3
 lxml==5.3.0
@@ -6,3 +9,5 @@ openpyxl==3.1.5
 google-api-python-client==2.149.0
 google-auth==2.35.0
 google-analytics-data==0.18.12
+streamlit==1.40.2
+pandas==2.2.3
