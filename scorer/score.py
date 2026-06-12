@@ -29,6 +29,7 @@ Env (LLM path):
 import argparse
 import json
 import os
+import time
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -103,11 +104,28 @@ def ask_llm(category, evidence, questions):
             }, ensure_ascii=False)},
         ],
     }
-    r = httpx.post(f"{base}/chat/completions",
-                   headers={"Authorization": f"Bearer {key}"},
-                   json=payload, timeout=120)
-    r.raise_for_status()
-    content = r.json()["choices"][0]["message"]["content"]
+    last_exc = None
+    for attempt in range(5):
+        r = httpx.post(f"{base}/chat/completions",
+                       headers={"Authorization": f"Bearer {key}"},
+                       json=payload, timeout=120)
+        if r.status_code == 429:
+            # respect Retry-After (Groq sends seconds), else exponential backoff
+            wait = float(r.headers.get("retry-after", 0)) or min(2 ** attempt * 3, 30)
+            print(f"    429 on {category} — waiting {wait:.0f}s (attempt {attempt + 1}/5)")
+            time.sleep(wait + 0.5)
+            continue
+        try:
+            r.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            last_exc = e
+            break
+        content = r.json()["choices"][0]["message"]["content"]
+        break
+    else:
+        raise httpx.HTTPError("exhausted retries (429)")
+    if last_exc:
+        raise last_exc
     content = content.strip().removeprefix("```json").removeprefix("```").removesuffix("```")
     answers = json.loads(content).get("answers", [])
     return {a["check_id"]: a for a in answers}

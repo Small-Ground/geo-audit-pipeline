@@ -18,7 +18,7 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/data/secrets/service-account.json
       - LITELLM_BASE_URL=http://litellm:4000/v1
       - LITELLM_API_KEY=${LITELLM_MASTER_KEY:-sk-local}
-      - LLM_MODEL=${LLM_MODEL:-gemini-2.0-flash}
+      - LLM_MODEL=${LLM_MODEL:-llama-3.3-70b-versatile}
     volumes:
       - ./:/data            # project (scripts, config, output) mounted into n8n
       - n8n_data:/home/node/.n8n
@@ -31,6 +31,7 @@ services:
     ports:
       - "4000:4000"
     environment:
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-local}
     volumes:

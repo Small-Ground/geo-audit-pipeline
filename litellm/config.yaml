@@ -1,13 +1,21 @@
-# LiteLLM proxy config — fronts Gemini's free tier with an OpenAI-compatible API.
-# The scorer calls http://litellm:4000/v1/chat/completions with model "gemini-2.0-flash".
+# LiteLLM proxy config — OpenAI-compatible API in front of the LLM backend.
+# The scorer calls http://litellm:4000/v1/chat/completions with the model name
+# set in LLM_MODEL. Groq is the default (genuinely open free tier); Gemini
+# entries are kept for when a free-tier-enabled Google account is available.
 model_list:
+  # --- Groq free tier (default) ---
+  - model_name: llama-3.3-70b-versatile
+    litellm_params:
+      model: groq/llama-3.3-70b-versatile
+      api_key: os.environ/GROQ_API_KEY
+  - model_name: llama-3.1-8b-instant
+    litellm_params:
+      model: groq/llama-3.1-8b-instant
+      api_key: os.environ/GROQ_API_KEY
+  # --- Gemini (optional fallback) ---
   - model_name: gemini-2.0-flash
     litellm_params:
       model: gemini/gemini-2.0-flash
-      api_key: os.environ/GEMINI_API_KEY
-  - model_name: gemini-1.5-flash
-    litellm_params:
-      model: gemini/gemini-1.5-flash
       api_key: os.environ/GEMINI_API_KEY
 
 litellm_settings:

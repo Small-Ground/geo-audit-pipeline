@@ -1,0 +1,6 @@
+{
+  // Inject variables from .env into newly opened integrated terminals,
+  // so GEMINI_API_KEY / PSI_API_KEY etc. are available without manual export.
+  "python.terminal.useEnvFile": true,
+  "python.envFile": "${workspaceFolder}/.env"
+}

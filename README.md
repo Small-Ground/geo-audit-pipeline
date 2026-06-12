@@ -50,20 +50,33 @@ Manual-review and not-yet-answered questions are excluded from the denominator
 and reported as outstanding coverage. The output also reports **agreement with
 the human-filled answers** still in the workbook — a live accuracy check.
 
-## Quick start — local, no Docker, no API keys (offline demo)
+## Run it — one command, no n8n, no Docker
 
-```bash
+```powershell
 pip install -r requirements.txt
+cp .env.example .env        # add your GROQ_API_KEY (+ PSI_API_KEY)
 
-# 1. Build the question bank from the workbook
+# Build the question bank once from the workbook
 python tools/extract_question_bank.py "<path>/Beaumont Tiles - GEO Technical Audit.xlsx" config/question_bank.json
 
-# 2. Crawl (Screaming Frog replacement)
-python crawler/crawl.py https://www.beaumont-tiles.com.au/ --max-pages 300 --out output/crawl.json
-
-# 3. Score with deterministic rules only (no LLM) and write the Excel
-python scorer/score.py --offline --out output/audit_populated.xlsx
+# Run the whole pipeline (crawl -> PSI -> GSC/GA4 -> score -> Excel)
+.\run_audit.ps1 https://www.beaumont-tiles.com.au/
 ```
+macOS/Linux: `./run_audit.sh https://www.beaumont-tiles.com.au/`
+Add `-Offline` (PowerShell) / `OFFLINE=1` (bash) to score with deterministic
+rules only — no LLM key needed.
+
+The runner reads keys from `.env`, points the scorer straight at Groq
+(OpenAI-compatible), and writes `output/audit_populated.xlsx`.
+
+### Schedule it (optional, replaces n8n's schedule trigger)
+No n8n needed — use Windows Task Scheduler:
+```powershell
+$action  = New-ScheduledTaskAction -Execute "pwsh" -Argument "-File `"$PWD\run_audit.ps1`" https://www.beaumont-tiles.com.au/"
+$trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At 6am
+Register-ScheduledTask -TaskName "GEO-Audit-Weekly" -Action $action -Trigger $trigger
+```
+(cron equivalent on macOS/Linux: `0 6 * * 1 /path/run_audit.sh https://...`)
 
 ## Full run (with free API keys + LLM)
 
