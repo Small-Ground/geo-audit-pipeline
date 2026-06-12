@@ -1,13 +1,13 @@
-# Combined deps for the audit pipeline + Streamlit UI.
+# Cloud/runtime deps for the audit pipeline + Streamlit UI.
 # Streamlit Community Cloud installs from this file at the repo root.
-# (Playwright is intentionally excluded — too heavy for the cloud sandbox;
-#  it lives in crawler/requirements-render.txt for local --render use.)
-httpx[http2]==0.27.2
-beautifulsoup4==4.12.3
-lxml==5.3.0
-openpyxl==3.1.5
-google-api-python-client==2.149.0
-google-auth==2.35.0
-google-analytics-data==0.18.12
-streamlit==1.40.2
-pandas==2.2.3
+# Loose lower-bound pins so pip resolves wheels for whatever Python the host
+# uses. Heavy/optional libs are kept OUT to keep the cloud install reliable:
+#   - Google API libs (GSC/GA4) -> collectors/requirements.txt (imported lazily,
+#     only when credentials are present; not needed for a cloud demo)
+#   - Playwright (--render) -> crawler/requirements-render.txt (local only)
+httpx[http2]>=0.27
+beautifulsoup4>=4.12
+lxml>=5.0
+openpyxl>=3.1
+streamlit>=1.40
+pandas>=2.2
