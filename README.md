@@ -1,6 +1,6 @@
 # GEO Technical Audit — free-tier automation pipeline
 
-Automates the *Beaumont Tiles – GEO Technical Audit* workbook with **no paid
+Automates a *GEO Technical Audit* workbook with **no paid
 tools**. Screaming Frog and the SEMrush API are intentionally excluded; a custom
 crawler replaces Screaming Frog, and the off-page / competitive checks that only
 SEMrush/Moz could answer are routed to manual review.
@@ -73,12 +73,12 @@ pip install -r requirements.txt
 cp .env.example .env        # add your GROQ_API_KEY (+ PSI_API_KEY)
 
 # Build the question bank once from the workbook
-python tools/extract_question_bank.py "<path>/Beaumont Tiles - GEO Technical Audit.xlsx" config/question_bank.json
+python tools/extract_question_bank.py "<path>/GEO Technical Audit.xlsx" config/question_bank.json
 
 # Run the whole pipeline (crawl -> PSI -> GSC/GA4 -> score -> Excel)
-.\run_audit.ps1 https://www.beaumont-tiles.com.au/
+.\run_audit.ps1 https://www.example.com/
 ```
-macOS/Linux: `./run_audit.sh https://www.beaumont-tiles.com.au/`
+macOS/Linux: `./run_audit.sh https://www.example.com/`
 Add `-Offline` (PowerShell) / `OFFLINE=1` (bash) to score with deterministic
 rules only — no LLM key needed.
 
@@ -88,7 +88,7 @@ The runner reads keys from `.env`, points the scorer straight at Groq
 ### Schedule it (optional, replaces n8n's schedule trigger)
 No n8n needed — use Windows Task Scheduler:
 ```powershell
-$action  = New-ScheduledTaskAction -Execute "pwsh" -Argument "-File `"$PWD\run_audit.ps1`" https://www.beaumont-tiles.com.au/"
+$action  = New-ScheduledTaskAction -Execute "pwsh" -Argument "-File `"$PWD\run_audit.ps1`" https://www.example.com/"
 $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At 6am
 Register-ScheduledTask -TaskName "GEO-Audit-Weekly" -Action $action -Trigger $trigger
 ```

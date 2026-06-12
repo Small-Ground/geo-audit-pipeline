@@ -13,7 +13,7 @@
       "parameters": {
         "values": {
           "string": [
-            { "name": "domain", "value": "https://www.beaumont-tiles.com.au/" }
+            { "name": "domain", "value": "https://www.example.com/" }
           ]
         },
         "options": {}
