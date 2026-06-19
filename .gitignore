@@ -9,3 +9,5 @@ config/question_bank.json
 *.xlsx
 __pycache__/
 *.pyc
+# Visual Studio IDE state (machine-specific, auto-generated)
+.vs/
