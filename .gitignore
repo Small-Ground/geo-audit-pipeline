@@ -13,3 +13,5 @@ __pycache__/
 .vs/
 # Local Claude Code config — references a machine-specific personal path
 CLAUDE.md
+# Restricted-identifier patterns (local only — never commit)
+.githooks/.blocked
