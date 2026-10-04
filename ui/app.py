@@ -12,6 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import altair as alt
 import pandas as pd
 import streamlit as st
 
@@ -161,9 +162,26 @@ for name, c in cats.items():
 df = pd.DataFrame(rows).sort_values("Category")
 
 st.subheader("Category scores")
-left, right = st.columns([1, 1])
-left.bar_chart(df.set_index("Category")["Score %"], horizontal=True)
-right.dataframe(df, hide_index=True, use_container_width=True)
+score_df = df[df["Score %"].notna()].copy()
+_chart = (
+    alt.Chart(score_df)
+    .mark_bar()
+    .encode(
+        x=alt.X("Score %:Q", scale=alt.Scale(domain=[0, 100]), title="Score %"),
+        y=alt.Y("Category:N", sort="-x", title=None),
+        color=alt.value("#534ab7"),
+        tooltip=["Category", "Score %"],
+    )
+    .properties(height=int(score_df["Category"].nunique() * 28) + 40)
+)
+st.altair_chart(_chart, use_container_width=True)
+st.dataframe(df, hide_index=True, use_container_width=True, column_config={
+    "Score %":    st.column_config.NumberColumn(width="small"),
+    "Earned":     st.column_config.NumberColumn(width="small"),
+    "Scored wt":  st.column_config.NumberColumn(width="small"),
+    "Manual wt":  st.column_config.NumberColumn(width="small"),
+    "Pending wt": st.column_config.NumberColumn(width="small"),
+})
 
 # Per-question detail
 st.subheader("Question detail")

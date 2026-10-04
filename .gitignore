@@ -11,3 +11,5 @@ __pycache__/
 *.pyc
 # Visual Studio IDE state (machine-specific, auto-generated)
 .vs/
+# Local Claude Code config — references a machine-specific personal path
+CLAUDE.md
